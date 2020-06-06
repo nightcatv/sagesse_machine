@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>Webduino Project</title>
+	<script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+	<script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+	<script src="https://blockly.webduino.io/webduino-blockly.js"></script>
+</head>
+
+<style type="text/css">
+	body,html{
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		top: -100;
+		background: url(https://pbs.twimg.com/media/CpV8PHZVUAIuuGs.jpg);
+		background-size: cover;
+	}
+
+	#im{
+		position: relative;
+		margin: 0 auto;
+		width: 100%;
+		max-width: 600px;
+		height: 100%;
+		box-sizing: border-box;
+		background: rgba(0, 0, 0, .4);
+	}
+
+	#input{
+		position: absolute;
+		z-index: 2;
+		height: 90px;
+		width: 100%;
+		left: 0;
+		bottom: 0;
+		margin: 0;
+		padding: 15px;
+		box-sizing: border-box;
+		background: #222;
+		color: #fff;
+	}
+
+	#input input, #input span{
+		display: inline-block;
+		margin: 5px 0;
+	}
+
+	#input input{
+		width: 75%;
+		border: none;
+		padding: 5px;
+	}
+
+	#input span{
+		width: 10%;
+		min-width: 50px;
+	}
+
+	#input div{
+		width: 80%;
+		float: left;
+	}
+
+	#input button{
+		float: right;
+		height: 90%;
+		width: 20%;
+		margin: 5px 0;
+		border: none;
+		padding: 0;
+		background: #369;
+		font-size: 16px;
+		color: #fff;
+	}
+
+	#show{
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 1;
+		width: 100%;
+		height: calc(100% - 90px);
+		overflow-y: scroll;
+		padding: 20px;
+		box-sizing: border-box;
+	}
+
+	#show>div{
+		position: relative;
+		margin: 0 0 20px 0;
+		clear: both;
+		height: 40px;
+	}
+
+	#show>div>div{
+		display: inline-block;
+	}
+
+	#show .time{
+		position: absolute;
+		top: -2px;
+		font-size: 10px;
+		color: #777;
+	}
+
+	#show .name{
+		color: #fff;
+		vertical-align: middle;
+	}
+
+	#show .content{
+		background: rgba(255, 255, 255, .8);
+		padding: 10px;
+		margin-top: 15px;
+		margin-left: 10px;
+		border-radius: 5px;
+		vertical-align: middle;
+	}
+
+	#show::-webkit-scrollbar{
+		width: 5px;
+	}
+
+	#show::-webkit-scrollbar-track{
+		background: rgba(255, 255, 255, .1);
+		border-radius: 5px;
+	}
+
+	#show::-webdit-scrollbar-thumb{
+		background: rgba(255, 255, 255, .2);
+		border-radius: 2px;
+	}
+</style>
+
+<script>
+	var firebase;
+
+	$(function(){
+		var $name = $('#name'),				//$ --> getElementById("id")
+			$content = $('#content'),
+			$btn = $('#btn'),
+			$show = $('#show'),				
+			ms = new Date().getTime();
+
+
+		// Initialize Firebase
+		var config = {
+		  	//apiKey: "AIzaSyB1jxvW7KF1jQEnJNx9I30UaS7scEQP-b0",
+		  	//authDomain: "webduino-project.firebaseapp.com",
+		    databaseURL: "https://webduino-project.firebaseio.com/",
+		    //projectId: "webduino-project",
+		    //storageBucket: "",
+		    //messagingSenderId: "629422360932"
+		};
+		firebase.initializeApp(config);
+		var database = firebase.database().ref();
+
+
+		console.log('裝置連線中...');
+
+		boardReady('8kvQG', function(board) {
+			var led;
+		  	board.systemReset();
+		  	board.samplingInterval = 250;
+		  	led = getLed(board, 10);
+
+		  	database.push({
+		   		name: '我是燈泡',
+		    	content: '我上線囉！',
+		    	time: getTime()
+		  	});
+
+		  	var event = [
+			    {
+			    	text:'開燈',
+			    	msg:'燈泡已經打開！',
+			     	fn:function(){
+			     		led.on();
+			     	}
+			    },
+			    {
+			     	text:'關燈',
+			     	msg:'燈泡已經關起來了！',
+			     	fn:function(){
+			     		led.off();
+			     	}
+			    },
+			    {
+			     	text:'閃爍',
+			     	msg:'一閃一閃亮晶晶~',
+			     	fn:function(){
+			     		led.blink(500);
+			     	}
+			    }
+/*			    {
+			     	text:'開啟燈泡語音控制介面',
+			     	msg:'我是燈泡，立刻為您開啟語音控制介面',
+			     	fn:function(){
+			     		window.open.("http://etech.gac.ntnu.edu.tw/iot06a/81%20Final/404040523+404040339+404040341+404040212+404040183(Sagesse%20Machine)/fantaisie%20lumiere/smart-correct.html", "我是燈泡的語音控制介面((嘿嘿~", config="height=500,width=500");
+			     	}
+			    }*/
+			];
+
+
+			database.limitToLast(1).on('value', function(snapshot) {
+		    	var s = {};
+		    	for(var i in snapshot.val()){
+		      		s = snapshot.val()[i];
+			      	console.log('('+s.time+') '+s.name+' 說：'+s.content);
+			      	for(var j in event){
+			        	if(s.content.indexOf(event[j].text)!=-1){
+			          		event[j].fn();
+			          		database.push({
+			            		name: '我是燈泡',
+			            		content:event[j].msg,
+			            		time: getTime()
+			          		});
+			        	}
+			      	}     
+		    	}
+		  	});
+		});
+
+		boardReady('nVbyP', function(board) {
+			var matrix;
+			var dht;
+			var pattern = "0000000000000000";
+			var movie1 = ["007e7e18187e7e00","007e7e60607e7e00","007e0c18180c7e00","00a1b3969c880000","000e027e007e427e"];
+			var movie2 = ["007e7e18187e7e00","007e7e60607e7e00","007e0c18180c7e00","00081c3663410000","000e027e007e427e"];
+			// >=70		<70
+
+		  	board.systemReset();
+		  	board.samplingInterval = 250;
+		  	matrix = getMax7219(board, 7, 8, 9);
+  			dht = getDht(board, 11);
+
+		  	database.push({
+		   		name: '我是跑馬燈',
+		    	content: '我上線囉！',
+		    	time: getTime()
+		  	});
+
+		  	var event = [
+		  		{
+			     	text:'現在天氣如何',
+			     	msg:'接下來將持續為您顯示現在的環境狀況',
+			     	fn:function(){
+			     		dht.read(function(evt){
+							database.push({
+					            name: '我是跑馬燈',
+					            content:'溫度為' + dht.temperature + '<br/>濕度為' + dht.humidity + '<br/>',
+					            time: getTime()
+					        });
+						}, 5000);
+					}
+			    },
+			    {
+			    	text:'謝謝',
+			     	msg:'不客氣~',
+			     	fn:function(){
+			     		dht.stopRead();
+			     	}
+			    },
+			    {
+			    	text:'奔跑吧',
+			    	msg:'我跑我跑',
+			     	fn:function(){
+			     		if (dht.humidity >= 70) {
+							matrix.animateStop();
+							matrix.animate(movie1, 1000);
+						}else {
+							matrix.animateStop();
+							matrix.animate(movie2, 1000);
+						}
+			     	}
+			    },
+			    {
+			     	text:'休息吧',
+			     	msg:'咻---',
+			     	fn:function(){
+			     		matrix.animateStop();
+						pattern = "0000000000000000";
+						matrix.on(pattern);
+						matrix.off();
+			     	}
+			    }
+			];
+
+
+			database.limitToLast(1).on('value', function(snapshot) {
+		    	var s = {};
+		    	var i, j;
+
+		    	for(i in snapshot.val()){
+		      		s = snapshot.val()[i];
+			      	console.log('('+s.time+') '+s.name+' 說：'+s.content);
+			      	for(j in event){
+			        	if(s.content.indexOf(event[j].text)!=-1){
+			          		event[j].fn();
+			          		database.push({
+			            		name: '我是跑馬燈',
+			            		content:event[j].msg,
+			            		time: getTime()
+			          		});
+			        	}
+			      	}     
+		    	}
+		  	});
+		});
+
+		boardReady('mxgVp', function(board) {
+			var relay;
+
+		  	board.systemReset();
+		  	board.samplingInterval = 250;
+  			relay = getRelay(board, 11);
+
+		  	database.push({
+		   		name: '我是灑水器',
+		    	content: '我上線囉！',
+		    	time: getTime()
+		  	});
+
+		  	var event = [
+			    {
+			    	text:'不要逼我',
+			    	msg:'關閉---Close Sesame!',
+			     	fn:function(){
+			     		relay.off();
+			     	}
+			    },
+			    {
+			     	text:'封印解除',
+			     	msg:'灑水吧---封印解除',
+			     	fn:function(){
+			     		relay.on();
+			     	}
+			    }
+/*			    {
+			    	text:'開啟灑水語音控制',
+			     	msg:'我是灑水器，立刻為您開啟語音控制介面',
+			     	fn:function(){
+			     		window.open.("http://etech.gac.ntnu.edu.tw/iot06a/81%20Final/404040523+404040339+404040341+404040212+404040183(Sagesse%20Machine)/puissant%20plantation/eau+voix.html", "我是灑水器的語音控制介面((啾咪~", config="height=500,width=500");
+			     	}
+			    }*/
+			];
+
+
+			database.limitToLast(1).on('value', function(snapshot) {
+		    	var s = {};
+		    	var i, j;
+
+		    	for(i in snapshot.val()){
+		      		s = snapshot.val()[i];
+			      	console.log('('+s.time+') '+s.name+' 說：'+s.content);
+			      	for(j in event){
+			        	if(s.content.indexOf(event[j].text)!=-1){
+			          		event[j].fn();
+			          		database.push({
+			            		name: '我是灑水器',
+			            		content:event[j].msg,
+			            		time: getTime()
+			          		});
+			        	}
+			      	}     
+		    	}
+		  	});
+		});
+
+
+		function getTime() {
+			var date = new Date();
+			var hr = date.getHours();
+			var min = date.getMinutes();
+			var sec = date.getSeconds();
+			if(hr < 10){
+			  	hr = '0' + hr;
+			}
+			if(min < 10){
+			  	min = '0' + min;
+			}
+			if(sec < 10){
+			  	sec = '0' + sec;
+			}
+			var now = hr + ':' + min + ':' + sec;
+			return now;
+		}
+
+		// Send data by button or enter
+		$btn.on('click', write);
+		$content.on('keydown', function(e){
+			if(e.keyCode == 13){
+				write();
+			}
+		});
+
+		function write(){
+			// Data Object
+			var postData = {
+				name: $('#name').val(),
+				content: $('#content').val(),
+				time: getTime(),
+				id:'id' + ms
+			};
+
+			// Write Data
+			database.push(postData);
+
+			//Clean the textbox
+			$('#content').val('');
+		};
+
+
+		// Load the whole data at the first time
+		database.once('value', function(snapshot){
+			$show.html('');
+			for(var i in snapshot.val()){
+				$show.append('<div><div class="time">'+snapshot.val()[i].time+'</div><div class="name">'+snapshot.val()[i].name+' 說</div><div class="content">'+snapshot.val()[i].content+'</div>');
+			}
+			$show.scrollTop($show[0].scrollHeight);
+		});
+
+		// Show the newest data while the database changed
+		database.limitToLast(1).on('value', function(snapshot){
+			for(var i in snapshot.val()){
+				$show.append('<div class="'+snapshot.val()[i].id+'"><div class="time">'+snapshot.val()[i].time+'</div><div class="name">'+snapshot.val()[i].name+' 說</div><div class="content">'+snapshot.val()[i].content+'</div>');
+			}
+
+			$show.scrollTop($show[0].scrollHeight);
+			$show.find('.id' + ms + ' .name').css({
+				'float' : 'right',
+				'padding-top' : '12px',
+				'color' : '#fc0'
+			});
+			$show.find('.id' + ms + ' .content').css({
+				'float' : 'right',
+				'margin-right' : '10px'
+			});
+			$show.find('.id' + ms + ' .time').css({
+				'right' : '0',
+				'color' : '#777'
+			});
+			
+			// Change the color if the message is from self
+/*			$show.find('.id' + ms).css({
+				color:'#f00'
+			});
+			$show.find('.id' + ms + ' div').css({
+				color:'#f00'
+			});*/			
+		});
+
+	});
+
+/*	$btn.on('click', function(){
+		// Data Object
+		var postData = {
+			name:$('#name').val(),
+			content:$('#content').val()
+		};
+
+		// Generate a key every single time that write the data into the database
+		var newPostKey = database.ref().child('posts').push().keyl
+		var updates = {};
+		updates[newPostKey] = postData;
+
+		// Write Data
+		database.ref().update(updates);
+	});*/
+
+</script>
+
+<body>
+	<div id="im">
+		<div id="input">
+			<div>
+				<span>姓名：</span><input id="name"><br/>
+  				<span>內容：</span><input id="content">
+  			</div>
+  			<button id="btn">送出資料</button>
+  		</div>
+  		<div id="show"></div>
+  	</div>
+</body>
+</html>

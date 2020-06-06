@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>Webduino Project</title>
+	<script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+</head>
+
+<script>
+	var firebase;
+
+	$(function(){
+		var $name = $('#name'),				//$ --> getElementById("id")
+			$content = $('#content'),
+			$btn = $('#btn'),
+			$show = $('#show'),				
+			ms = new Date().getTime();
+
+
+		// Initialize Firebase
+		var config = {
+		  	//apiKey: "AIzaSyB1jxvW7KF1jQEnJNx9I30UaS7scEQP-b0",
+		  	//authDomain: "webduino-project.firebaseapp.com",
+		    databaseURL: "https://webduino-project.firebaseio.com/",
+		    //projectId: "webduino-project",
+		    //storageBucket: "",
+		    //messagingSenderId: "629422360932"
+		};
+		firebase.initializeApp(config);
+		var database = firebase.database().ref('/test/');
+
+
+		// Send data by button or enter
+		$btn.on('click', write);
+		$content.on('keydown', function(e){
+			if(e.keyCode == 13){
+				write();
+			}
+		});
+
+		function write(){
+			var date = new Date();
+			var hr = date.getHours();
+			var min = date.getMinutes();
+			var sec = date.getSeconds();
+
+			if(hr < 10){
+				hr = '0' + hr;
+			} 
+			if(min < 10){
+				min = '0' + min;
+			}
+			if(sec < 10){
+				sec = '0' + sec;
+			}
+
+			// Get the time while press the button or enter
+			var now = hr + ':' + min + ':' + sec;
+
+			// Data Object
+			var postData = {
+				name:$('#name').val(),
+				content:$('#content').val(),
+				time:now,
+				id:'id' + ms
+			};
+
+			// Write Data
+			database.push(postData);
+
+			//Clean the textbox
+			$('#content').val('');
+		};
+
+
+		// Load the whole data at the first time
+		database.once('value', function(snapshot){
+			$show.html('');
+			for(var i in snapshot.val()){
+				$show.prepend('<div><div>' + snapshot.val()[i].time + '</div>' + snapshot.val()[i].name + ' 說： ' + snapshot.val()[i].content + '</div>');
+			}
+		});
+
+		// Show the newest data while the database changed
+		database.limitToLast(1).on('value', function(snapshot){
+			for(var i in snapshot.val()){
+				$show.prepend('<div class="' + snapshot.val()[i].id + '"><div>' + snapshot.val()[i].time + '</div>' + snapshot.val()[i].name + ' 說： ' + snapshot.val()[i].content + '</div>');
+			}
+			
+			// Change the color if the message is from self
+			$show.find('.id' + ms).css({
+				color:'#f00'
+			});
+			$show.find('.id' + ms + ' div').css({
+				color:'#f00'
+			});
+		});
+	});
+/*
+	$btn.on('click', function(){
+		// Data Object
+		var postData = {
+			name:$('#name').val(),
+			content:$('#content').val()
+		};
+
+		// Generate a key every single time that write the data into the database
+		var newPostKey = database.ref().child('posts').push().keyl
+		var updates = {};
+		updates[newPostKey] = postData;
+
+		// Write Data
+		database.ref().update(updates);
+	});
+*/
+</script>
+
+<body>
+	姓名：<input id="name"><br/>
+  	聊天內容：<input id="content"><br/>
+  	<button id="btn">送出資料</button>
+  	<br/><br/>
+  	<div id="show"></div>
+</body>
+</html>

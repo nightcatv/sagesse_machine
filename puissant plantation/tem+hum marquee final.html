@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>LED Matrix Twist</title>
+	<!-- BootStrap -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<!-- WEBDUINO -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+	<script src="https://blockly.webduino.io/webduino-blockly.js"></script>
+	<script src="https://blockly.webduino.io/lib/firebase.js"></script>
+	<script src="https://blockly.webduino.io/lib/runtime.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<script>
+	var matrix;
+	// 等候 WEBDUINO 板連線 OK
+	boardReady({device: 'nVbyP'}, function (board) {
+		board.systemReset();
+		board.samplingInterval = 250;
+		// Max7219 LED 點陣初始設定
+		matrix = getMax7219(board, 7, 8, 9);
+		matrix.on("0000000000000000");
+		matrix.animateStop();
+	});
+</script>
+<script>
+var matrix;
+var dht;
+
+
+boardReady({device: 'nVbyP'}, function (board) {
+  board.systemReset();
+  board.samplingInterval = 500;
+  matrix = getMax7219(board, 7, 8, 9);
+  dht = getDht(board, 11);
+
+  dht.read(function(evt){
+			document.getElementById("tem").innerHTML = dht.temperature;
+			document.getElementById("hum").innerHTML = dht.humidity;
+		}, 1000);
+});
+
+	var pattern = "0000000000000000";
+	var movie1 = ["007e7e18187e7e00","007e7e60607e7e00","007e0c18180c7e00","00a1b3969c880000","000e027e007e427e"];
+	var movie2 = ["007e7e18187e7e00","007e7e60607e7e00","007e0c18180c7e00","00081c3663410000","000e027e007e427e"];
+	// >=70		<70
+	
+    function goMovie() {
+    	if (dht.humidity >= 70) {
+		matrix.animateStop();
+		matrix.animate(movie1, 1000);}
+		else {
+		matrix.animateStop();
+		matrix.animate(movie2, 1000);}
+  		}
+
+
+	// 停止
+	function freeze() {
+		matrix.animateStop();
+	}
+	// 全暗
+	function turnOff() {
+		matrix.animateStop();
+		pattern = "0000000000000000";
+		matrix.on(pattern);
+		matrix.off();
+	}
+</script>
+
+<body>
+	<div class="container">
+		<h3>LED Matrix Twist</h3>
+		<p>
+			<button type="button" class="btn btn-success" onclick="goMovie()">奔跑吧</button>
+			<button type="button" class="btn btn-info"    onclick="freeze()" >停止</button>
+			<button type="button" class="btn btn-primary" onclick="turnOff()">關閉</button>
+		</p>
+	</div>
+	<div class="container">
+		<h3>DHT Hello</h3>
+		<h4>溫度：<span id="tem">XXX</span>（℃）</h4>
+		<h4>濕度：<span id="hum">YYY</span>（%）</h4>
+	</div>
+</body>
+
+</html>

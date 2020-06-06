@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>智慧插座控制</title>
+  <script src="https://blockly.webduino.io/lib/jquery-1.9.1.min.js"></script>
+  <script src="https://blockly.webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <script src="https://blockly.webduino.io/lib/webduino-blockly.js"></script>
+  <script src="https://blockly.webduino.io/lib/firebase.js"></script>
+  <script src="https://blockly.webduino.io/lib/runtime.min.js"></script>
+  <style type="text/css">
+	#demo-area-01-show {
+    font-size: 60px;
+    pointer-events: auto!important;
+  }
+  </style>
+</head>
+
+<script>
+var led;
+var ultrasonic;
+
+
+boardReady({device: '8kvQG'}, function (board) {
+  board.systemReset();
+  board.samplingInterval = 500;
+  led = getLed(board, 10);
+  ultrasonic = getUltrasonic(board, 7, 6);
+  ultrasonic.ping(function(cm){
+    console.log(ultrasonic.distance);
+    if (ultrasonic.distance < 30) {
+      function speechRecognition(){
+        if (!("webkitSpeechRecognition" in window)) {
+          alert("本瀏覽器不支援語音辨識，請更換瀏覽器！(Chrome 25 版以上才支援語音辨識)");
+        } else{
+          window._recognition = new webkitSpeechRecognition();
+          window._recognition.continuous = true;
+          window._recognition.interimResults = true;
+          window._recognition.lang = "cmn-Hant-TW";
+
+          window._recognition.onstart = function() {
+            window._recognition.status = true;
+            console.log("Start recognize...");
+          };
+
+          window._recognition.onend = function() {
+            console.log("Stop recognize");
+            if(window._recognition.status){
+               window._recognition.start();
+            }
+          };
+
+          window._recognition.onresult = function(event,result) {
+            result = {};
+            result.resultLength = event.results.length-1;
+            result.resultTranscript = event.results[result.resultLength][0].transcript;
+            if(event.results[result.resultLength].isFinal===true){
+              console.log(result.resultTranscript);
+                document.getElementById("demo-area-01-show").innerHTML = result.resultTranscript;
+        if(result.resultTranscript.indexOf("開燈")!== -1){
+                  led.on();
+                console.log(event.results[result.resultLength]);
+              }
+        if(result.resultTranscript.indexOf("關燈")!== -1){
+                  led.off();
+                console.log(event.results[result.resultLength]);
+              }
+        if(result.resultTranscript.indexOf("閃爍")!== -1){
+                  led.blink(0.5*1000);
+                console.log(event.results[result.resultLength]);
+              }      
+              console.log("final");
+            }else if(event.results[result.resultLength].isFinal===false){
+                    }
+          };
+          window._recognition.start();
+        }
+      }
+      speechRecognition();
+    }
+  }, 10000);
+});
+</script>	
+<body>
+  <div><span id="demo-area-01-show">123</span></div>
+</body>

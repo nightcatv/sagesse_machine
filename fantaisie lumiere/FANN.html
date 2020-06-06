@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Webduino Voice Command LED</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<!-- WEBDUINO -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="https://blockly.webduino.io/lib/jquery-1.9.1.min.js"></script>
+  	<script src="https://blockly.webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  	<script src="https://blockly.webduino.io/lib/webduino-blockly.js"></script>
+  	<script src="https://blockly.webduino.io/lib/firebase.js"></script>
+  	<script src="https://blockly.webduino.io/lib/runtime.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<script>
+	var led;
+	// 等候 WEBDUINO 板連線 OK
+	boardReady({device: 'nVbyP'}, function (board) {
+		board.systemReset();
+		board.samplingInterval = 20;
+		// LED 初始設定
+		led = getLed(board, 9);
+		led.off();
+	});
+</script>
+
+<script>
+	function speechRecognition() {
+		if (!("webkitSpeechRecognition" in window)) {
+			alert("本瀏覽器不支援語音辨識，請更換瀏覽器！(Chrome 25 版以上才支援語音辨識)");
+		} else{
+			window._recognition = new webkitSpeechRecognition();
+			window._recognition.continuous = true;
+			window._recognition.interimResults = true;
+			window._recognition.lang = "cmn-Hant-TW";
+			window._recognition.onstart = function() {
+				window._recognition.status = true;
+				console.log("Start recognize...");
+			};
+			window._recognition.onend = function() {
+				console.log("Stop recognize");
+				if (window._recognition.status) 
+					window._recognition.start();
+				}
+			};
+			window._recognition.onresult = function(event,result) {
+				result = {};
+				result.resultLength = event.results.length-1;
+				result.resultTranscript = event.results[result.resultLength][0].transcript;
+				if (event.results[result.resultLength].isFinal === false) {
+					//console.log(result.resultTranscript);
+					document.getElementById("say").innerHTML = result.resultTranscript;
+					extract_command(result.resultTranscript);
+				} else if (event.results[result.resultLength].isFinal === true) {
+					//console.log("final");
+					document.getElementById("say").innerHTML = result.resultTranscript;
+					extract_command(result.resultTranscript);
+				}
+			};
+			window._recognition.start();
+		}
+		function extract_command(sentence) {
+			if (sentence.indexOf("開") !== -1) {
+				document.getElementById("cmd").innerHTML = "開";
+				document.getElementById("bulb").src = "on.jpg";
+				led.on();
+			}
+			if (sentence.indexOf("關") !== -1) {
+				document.getElementById("cmd").innerHTML = "關";
+				document.getElementById("bulb").src = "off.jpg";
+				led.off();
+			}
+			if (sentence.indexOf("清除") !== -1) {
+				document.getElementById("say").innerHTML = "";
+				document.getElementById("cmd").innerHTML = "";
+			}
+		}
+		speechRecognition();
+	// }
+	// 注意：
+	// 這是一個古怪的 JavaScript 程式設計技巧，
+	// 在語法上最後這裡原本應該有一個 } 作為結尾，但是卻不能加上，否則辨識不能持續進行，
+	// 其實是 Rucursive 呼叫 speechRecognition 函式
+</script>
+
+<body>
+	<div class="container">
+		<h3>Webduino Voice Command LED</h3>
+		<h4>(Google Web Speech API)</h4>
+		<h4>輸入：<span id="say" style="color:blue;">......</span></h4>
+		<h4>口令：<span id="cmd" style="color:red;">XXX</span></h4>
+		<p><img src="off.jpg" class="img-thumbnail" id="bulb"></p>
+	</div>
+</body>
+
+</html>

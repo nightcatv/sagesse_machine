@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>灑水器+語音</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- WEBDUINO -->
+  <script src="https://blockly.webduino.io/lib/jquery-1.9.1.min.js"></script>
+  <script src="https://blockly.webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <script src="https://blockly.webduino.io/lib/webduino-blockly.js"></script>
+  <script src="https://blockly.webduino.io/lib/firebase.js"></script>
+  <script src="https://blockly.webduino.io/lib/runtime.min.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<script>
+var relay;
+
+boardReady({device: 'mxgVp'}, function (board) {
+    board.systemReset();
+    board.samplingInterval = 50;
+    relay = getRelay(board, 11);
+  });
+
+  
+function speechRecognition() {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("本瀏覽器不支援語音辨識，請更換瀏覽器！(Chrome 25 版以上才支援語音辨識)");
+    } else{
+      window._recognition = new webkitSpeechRecognition();
+      window._recognition.continuous = true;
+      window._recognition.interimResults = true;
+      window._recognition.lang = "cmn-Hant-TW";
+      window._recognition.onstart = function() {
+        window._recognition.status = true;
+        console.log("Start recognize...");
+      };
+      window._recognition.onend = function() {
+        console.log("Stop recognize");
+        if (window._recognition.status) 
+          window._recognition.start();
+        }
+      };
+      window._recognition.onresult = function(event,result) {
+        result = {};
+        result.resultLength = event.results.length-1;
+        result.resultTranscript = event.results[result.resultLength][0].transcript;
+        if (event.results[result.resultLength].isFinal === false) {
+          //console.log(result.resultTranscript);
+          document.getElementById("say").innerHTML = result.resultTranscript;
+          extract_command(result.resultTranscript);
+        } else if (event.results[result.resultLength].isFinal === true) {
+          //console.log("final");
+          document.getElementById("say").innerHTML = result.resultTranscript;
+          extract_command(result.resultTranscript);
+        }
+      };
+      window._recognition.start();
+    }
+    
+    function extract_command(sentence) {
+      if (sentence.indexOf("不要逼我") !== -1) {
+        document.getElementById("cmd").innerHTML = "關閉---Close Sesame!";
+        relay.off();
+      }
+      if (sentence.indexOf("封印解除") !== -1) {
+        document.getElementById("cmd").innerHTML = "灑水吧---封印解除";
+        relay.on();
+      }
+      if (sentence.indexOf("清除") !== -1) {
+        document.getElementById("say").innerHTML = "";
+        document.getElementById("cmd").innerHTML = "";
+      }
+    }
+    speechRecognition();  
+</script>
+
+<body>
+  <div class="container">
+    <h3>Webduino Voice Command</h3>
+    <h4>(Google Web Speech API)</h4>
+    <h4>輸入：<span id="say" style="color:blue;">......</span></h4>
+    <h4>口令：<span id="cmd" style="color:red;">XXX</span></h4>
+  </div>
+</body>
+
+
+</html>
