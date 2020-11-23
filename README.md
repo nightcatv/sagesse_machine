@@ -11,7 +11,7 @@
 ## Basic Structure
 * In this project, we have 3 parts of it:
 	1. sagesse machine
-	2. puissant plantation
+	2. puissant plantation (Collaborate with [@bessyhuang](https://github.com/bessyhuang))
 	3. fantaisie lumiere
 * "Sagesse machine" means "the wisdom of machine" in france.
 	* In fact, this is an online chatbot.
